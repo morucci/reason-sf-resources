@@ -15,18 +15,16 @@ function obj(param) {
   return Json_decode.dict(connection, param);
 }
 
-var MyDecode = {
+var SRDecode = {
   connection: connection,
   obj: obj
 };
 
 function parseSourceRepositories(json) {
-  var st = Json.stringify(json);
-  console.log("toto" + st);
-  var a = Json_decode.dict(connection, json);
-  console.log(Caml_array.caml_array_get(Object.keys(a), 0));
+  var srdict = Json_decode.dict(connection, json);
+  var srdictKey0 = Caml_array.caml_array_get(Object.keys(srdict), 0);
   return {
-          name: "Test SR",
+          name: srdictKey0,
           connection: "github.com",
           zuul_exclude_unprotected_branches: true
         };
@@ -48,35 +46,13 @@ function parseProject(json) {
         };
 }
 
-function price(param) {
-  return Json_decode.field("price", Json_decode.$$float, param);
-}
-
-function obj$1(param) {
-  return Json_decode.dict(price, param);
-}
-
-var Decode = {
-  price: price,
-  obj: obj$1
-};
-
-var data = " {\n  \"AAPL\": { \"price\": 217.36 },\n  \"ABCD\": { \"price\": 240.5 }\n} ";
-
-var decodedData = Json_decode.dict(price, Json.parseOrRaise(data));
-
-console.log(decodedData["AAPL"]);
-
 function runExample(param) {
   return parseProject(example);
 }
 
 exports.example = example;
-exports.MyDecode = MyDecode;
+exports.SRDecode = SRDecode;
 exports.parseSourceRepositories = parseSourceRepositories;
 exports.parseProject = parseProject;
-exports.Decode = Decode;
-exports.data = data;
-exports.decodedData = decodedData;
 exports.runExample = runExample;
-/* decodedData Not a pure module */
+/* No side effect */

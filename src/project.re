@@ -33,20 +33,19 @@ type project = {
   source_repositories: array(sourceRepository),
 };
 
-module MyDecode = {
+module SRDecode = {
   open Json.Decode;
   let connection = field("connection", string);
   let obj = dict(connection);
 };
 
+// This is misterious
+// https://stackoverflow.com/questions/52828145/using-bs-json-to-decode-object-with-dynamic-keys-in-root
 let parseSourceRepositories = json => {
-  let st = Json.stringify(json);
-  print_endline("toto" ++ st);
-  let a = json |> MyDecode.obj;
-  print_endline(Array.get(a |> Js.Dict.keys, 0));
-  // let a = json |> Json.Decode.dict(sourceRepository)
+  let srdict = json |> SRDecode.obj;
+  let srdictKey0 = Array.get(srdict |> Js.Dict.keys, 0);
   {
-    name: "Test SR",
+    name: srdictKey0,
     connection: "github.com",
     zuul_exclude_unprotected_branches: true,
   };
@@ -65,20 +64,6 @@ let parseProject = json => {
   };
 };
 
-module Decode = {
-  open Json.Decode;
-  let price = field("price", float);
-  let obj = dict(price);
-};
-
-let data = {| {
-  "AAPL": { "price": 217.36 },
-  "ABCD": { "price": 240.5 }
-} |};
-
-let decodedData = data |> Json.parseOrRaise |> Decode.obj;
-
-let _ = decodedData->(Js.Dict.unsafeGet("AAPL")) |> Js.log;
 
 let runExample = () => {
   parseProject(example);

@@ -1,0 +1,17 @@
+{
+  "contacts": [
+    "harrymichal@seznam.cz"
+  ],
+  "description": "Unprivileged development environment",
+  "tenant": "local",
+  "website": "https://github.com/debarshiray/toolbox",
+  "name": "toolbox",
+  "source-repositories": [
+    {
+      "containers/toolbox": {
+        "connection": "github.com",
+        "zuul/exclude-unprotected-branches": true
+      }
+    }
+  ]
+}

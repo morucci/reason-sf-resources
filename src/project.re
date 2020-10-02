@@ -25,13 +25,18 @@ type sourceRepository = {
 };
 
 type project = {
-  contacts: list(string),
+  name: option(string),
   description: string,
-  tenant: string,
-  website: string,
-  name: string,
+  tenant: option(string),
+  connection: option(string),
+  website: option(string),
+  documentation: option(string),
   issue_tracker_url: option(string),
-  source_repositories: array(sourceRepository),
+  review_dashboard: option(string),
+  mailing_lists: option(list(string)),
+  contacts: option(list(string)),
+  source_repositories: list(sourceRepository),
+  options: option(list(string))
 };
 
 module SRDecode = {
@@ -58,14 +63,19 @@ let parseSourceRepositories = json => {
 let parseProject = json => {
   let data = Json.parseOrRaise(json);
   Json.Decode.{
-    name: data |> field("name", string),
+    name: data |> optional(field("name", string)),
     description: data |> field("description", string),
-    contacts: data |> field("contacts", list(string)),
-    tenant: data |> field("tenant", string),
-    website: data |> field("website", string),
+    tenant: data |> optional(field("tenant", string)),
+    connection: data |> optional(field("connection", string)),
+    website: data |> optional(field("website", string)),
+    documentation: data |> optional(field("documentation", string)),
     issue_tracker_url: data |> optional(field("issue-tracker-url", string)),
+    review_dashboard: data |> optional(field("review-dashboard", string)),
+    mailing_lists: data |> optional(field("mailing-lists", list(string))),
+    contacts: data |> optional(field("contacts", list(string))),
     source_repositories:
-      data |> field("source-repositories", array(parseSourceRepositories)),
+      data |> field("source-repositories", list(parseSourceRepositories)),
+    options: data |> optional(field("options", list(string)))
   };
 };
 

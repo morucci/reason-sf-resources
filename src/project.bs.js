@@ -46,18 +46,45 @@ function parseSourceRepositories(json) {
 function parseProject(json) {
   var data = Json.parseOrRaise(json);
   return {
-          contacts: Json_decode.field("contacts", (function (param) {
-                  return Json_decode.list(Json_decode.string, param);
+          name: Json_decode.optional((function (param) {
+                  return Json_decode.field("name", Json_decode.string, param);
                 }), data),
           description: Json_decode.field("description", Json_decode.string, data),
-          tenant: Json_decode.field("tenant", Json_decode.string, data),
-          website: Json_decode.field("website", Json_decode.string, data),
-          name: Json_decode.field("name", Json_decode.string, data),
+          tenant: Json_decode.optional((function (param) {
+                  return Json_decode.field("tenant", Json_decode.string, param);
+                }), data),
+          connection: Json_decode.optional((function (param) {
+                  return Json_decode.field("connection", Json_decode.string, param);
+                }), data),
+          website: Json_decode.optional((function (param) {
+                  return Json_decode.field("website", Json_decode.string, param);
+                }), data),
+          documentation: Json_decode.optional((function (param) {
+                  return Json_decode.field("documentation", Json_decode.string, param);
+                }), data),
           issue_tracker_url: Json_decode.optional((function (param) {
                   return Json_decode.field("issue-tracker-url", Json_decode.string, param);
                 }), data),
+          review_dashboard: Json_decode.optional((function (param) {
+                  return Json_decode.field("review-dashboard", Json_decode.string, param);
+                }), data),
+          mailing_lists: Json_decode.optional((function (param) {
+                  return Json_decode.field("mailing-lists", (function (param) {
+                                return Json_decode.list(Json_decode.string, param);
+                              }), param);
+                }), data),
+          contacts: Json_decode.optional((function (param) {
+                  return Json_decode.field("contacts", (function (param) {
+                                return Json_decode.list(Json_decode.string, param);
+                              }), param);
+                }), data),
           source_repositories: Json_decode.field("source-repositories", (function (param) {
-                  return Json_decode.array(parseSourceRepositories, param);
+                  return Json_decode.list(parseSourceRepositories, param);
+                }), data),
+          options: Json_decode.optional((function (param) {
+                  return Json_decode.field("options", (function (param) {
+                                return Json_decode.list(Json_decode.string, param);
+                              }), param);
                 }), data)
         };
 }

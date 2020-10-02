@@ -15,8 +15,11 @@ let example = {|
         "connection": "github.com",
         "zuul/exclude-unprotected-branches": true
       }
-
-}, "software-factory/cauth"
+    },
+    "software-factory/cauth",
+    {
+      "software-factory/managesf": {}
+    }
   ]
 }
 |};
@@ -42,25 +45,12 @@ type project = {
   options: option(list(string)),
 };
 
-module SRDecode = {
-  open Json.Decode;
-  let connection = field("connection", string);
-  let obj = dict(connection);
-};
-
 let decodeSourceRepositoryDict = (name: Js.Dict.key, json: Js.Json.t) => {
   Json.Decode.{
     name,
-    connection: json |> field("connection", optional(string)),
+    connection: json |> optional(field("connection", string)),
   };
 };
-
-let debug = (msg, obj) => {
-  Js.log("# " ++ msg);
-  Js.log(obj);
-};
-
-let decodeFail = msg => Json.Decode.DecodeError(msg) |> raise;
 
 // let decodeSourceRepository = (json: Js.Json.t): sourceRepository => {
 let decodeSourceRepository: decoder(sourceRepository) =
@@ -70,40 +60,34 @@ let decodeSourceRepository: decoder(sourceRepository) =
       switch (Js.Dict.entries(dict) |> Belt.List.fromArray) {
       | [(k, v)] => decodeSourceRepositoryDict(k, v)
       | _ =>
-        "SourceRepository dictionary can only contain one value" |> decodeFail
+        "SourceRepository dictionary can only contain one value"
+        |> Util.decodeFail
       }
     | None => Json.Decode.{name: json |> string, connection: None}
     };
   };
 
-/*  let connection =
-        json
-        |> Json.Decode.optional(
-             Json.Decode.at([srdictKey0], SRDecode.connection),
-           );
-      {name: srdictKey0, connection};
-    };
-    */
 let parseProject = json => {
-  let data = Json.parseOrRaise(json);
   Json.Decode.{
-    name: data |> optional(field("name", string)),
-    description: data |> field("description", string),
-    tenant: data |> optional(field("tenant", string)),
-    connection: data |> optional(field("connection", string)),
-    website: data |> optional(field("website", string)),
-    documentation: data |> optional(field("documentation", string)),
-    issue_tracker_url: data |> optional(field("issue-tracker-url", string)),
-    review_dashboard: data |> optional(field("review-dashboard", string)),
-    mailing_lists: data |> optional(field("mailing-lists", list(string))),
-    contacts: data |> optional(field("contacts", list(string))),
+    name: json |> optional(field("name", string)),
+    description: json |> field("description", string),
+    tenant: json |> optional(field("tenant", string)),
+    connection: json |> optional(field("connection", string)),
+    website: json |> optional(field("website", string)),
+    documentation: json |> optional(field("documentation", string)),
+    issue_tracker_url: json |> optional(field("issue-tracker-url", string)),
+    review_dashboard: json |> optional(field("review-dashboard", string)),
+    mailing_lists: json |> optional(field("mailing-lists", list(string))),
+    contacts: json |> optional(field("contacts", list(string))),
     source_repositories:
-      data |> field("source-repositories", list(decodeSourceRepository)),
-    options: data |> optional(field("options", list(string))),
+      json |> field("source-repositories", list(decodeSourceRepository)),
+    options: json |> optional(field("options", list(string))),
   };
 };
 
 let runExample = () => {
-  let demo = parseProject(example);
-  Js.log(demo.source_repositories |> Belt.List.toArray);
+  Js.log("Running project example");
+  let json = Json.parseOrRaise(example);
+  let project = parseProject(json);
+  Js.log(project);
 };

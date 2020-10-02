@@ -131,18 +131,29 @@ let example = {|
 }
 |};
 
-type resources = {
-    connections: list(SF.Connection.connection)
-}
+type resources = {projects: list(Project.project)};
+type top = {resources};
 
-let parseResources = (json) => {
-    let data = Json.parseOrRaise(json)
-//    Json.Decode.{
-//        connections: data |> at([cnxdictKey0], CNXDecode.name),
-//    }
-}
+let decodeProjects = (json: Js.Json.t): list(Project.project) => {
+  switch (Js.Json.decodeObject(json)) {
+  | Some(projects_dict) =>
+    let plist = projects_dict |> Js.Dict.values |> Belt.List.fromArray;
+    Belt.List.map(plist, Project.parseProject);
+  | None => "Unable to decode projects" |> Util.decodeFail
+  };
+};
+
+let decodeResources = (json: Js.Json.t): resources => {
+  Json.Decode.{projects: json |> field("projects", decodeProjects)};
+};
+
+let decodeTop = (json: Js.Json.t): top => {
+  Json.Decode.{resources: json |> field("resources", decodeResources)};
+};
 
 let runExample = () => {
-  //  parseResources(example);
-  Js.log("noop");
+  Js.log("Running resources example");
+  let json = Json.parseOrRaise(example);
+  let top = decodeTop(json);
+  Js.log(top);
 };

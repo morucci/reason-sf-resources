@@ -2,48 +2,22 @@
 'use strict';
 
 var Json = require("@glennsl/bs-json/src/Json.bs.js");
+var Util = require("./Util.bs.js");
 var Js_dict = require("bs-platform/lib/js/js_dict.js");
 var Js_json = require("bs-platform/lib/js/js_json.js");
 var Belt_List = require("bs-platform/lib/js/belt_List.js");
 var Caml_option = require("bs-platform/lib/js/caml_option.js");
 var Json_decode = require("@glennsl/bs-json/src/Json_decode.bs.js");
 
-var example = "\n{\n  \"contacts\": [\n    \"harrymichal@seznam.cz\"\n  ],\n  \"description\": \"Unprivileged development environment\",\n  \"tenant\": \"local\",\n  \"website\": \"https://github.com/debarshiray/toolbox\",\n  \"name\": \"toolbox\",\n  \"source-repositories\": [\n    {\n      \"containers/toolbox\": {\n        \"connection\": \"github.com\",\n        \"zuul/exclude-unprotected-branches\": true\n      }\n\n}, \"software-factory/cauth\"\n  ]\n}\n";
-
-function connection(param) {
-  return Json_decode.field("connection", Json_decode.string, param);
-}
-
-function obj(param) {
-  return Json_decode.dict(connection, param);
-}
-
-var SRDecode = {
-  connection: connection,
-  obj: obj
-};
+var example = "\n{\n  \"contacts\": [\n    \"harrymichal@seznam.cz\"\n  ],\n  \"description\": \"Unprivileged development environment\",\n  \"tenant\": \"local\",\n  \"website\": \"https://github.com/debarshiray/toolbox\",\n  \"name\": \"toolbox\",\n  \"source-repositories\": [\n    {\n      \"containers/toolbox\": {\n        \"connection\": \"github.com\",\n        \"zuul/exclude-unprotected-branches\": true\n      }\n    },\n    \"software-factory/cauth\",\n    {\n      \"software-factory/managesf\": {}\n    }\n  ]\n}\n";
 
 function decodeSourceRepositoryDict(name, json) {
   return {
           name: name,
-          connection: Json_decode.field("connection", (function (param) {
-                  return Json_decode.optional(Json_decode.string, param);
+          connection: Json_decode.optional((function (param) {
+                  return Json_decode.field("connection", Json_decode.string, param);
                 }), json)
         };
-}
-
-function debug(msg, obj) {
-  console.log("# " + msg);
-  console.log(obj);
-  
-}
-
-function decodeFail(msg) {
-  throw {
-        RE_EXN_ID: Json_decode.DecodeError,
-        _1: msg,
-        Error: new Error()
-      };
 }
 
 function decodeSourceRepository(json) {
@@ -55,82 +29,72 @@ function decodeSourceRepository(json) {
           };
   }
   var match = Belt_List.fromArray(Js_dict.entries(Caml_option.valFromOption(dict)));
-  if (match) {
-    if (match.tl) {
-      throw {
-            RE_EXN_ID: Json_decode.DecodeError,
-            _1: "SourceRepository dictionary can only contain one value",
-            Error: new Error()
-          };
-    }
-    var match$1 = match.hd;
-    return decodeSourceRepositoryDict(match$1[0], match$1[1]);
+  if (!match) {
+    return Util.decodeFail("SourceRepository dictionary can only contain one value");
   }
-  throw {
-        RE_EXN_ID: Json_decode.DecodeError,
-        _1: "SourceRepository dictionary can only contain one value",
-        Error: new Error()
-      };
+  if (match.tl) {
+    return Util.decodeFail("SourceRepository dictionary can only contain one value");
+  }
+  var match$1 = match.hd;
+  return decodeSourceRepositoryDict(match$1[0], match$1[1]);
 }
 
 function parseProject(json) {
-  var data = Json.parseOrRaise(json);
   return {
           name: Json_decode.optional((function (param) {
                   return Json_decode.field("name", Json_decode.string, param);
-                }), data),
-          description: Json_decode.field("description", Json_decode.string, data),
+                }), json),
+          description: Json_decode.field("description", Json_decode.string, json),
           tenant: Json_decode.optional((function (param) {
                   return Json_decode.field("tenant", Json_decode.string, param);
-                }), data),
+                }), json),
           connection: Json_decode.optional((function (param) {
                   return Json_decode.field("connection", Json_decode.string, param);
-                }), data),
+                }), json),
           website: Json_decode.optional((function (param) {
                   return Json_decode.field("website", Json_decode.string, param);
-                }), data),
+                }), json),
           documentation: Json_decode.optional((function (param) {
                   return Json_decode.field("documentation", Json_decode.string, param);
-                }), data),
+                }), json),
           issue_tracker_url: Json_decode.optional((function (param) {
                   return Json_decode.field("issue-tracker-url", Json_decode.string, param);
-                }), data),
+                }), json),
           review_dashboard: Json_decode.optional((function (param) {
                   return Json_decode.field("review-dashboard", Json_decode.string, param);
-                }), data),
+                }), json),
           mailing_lists: Json_decode.optional((function (param) {
                   return Json_decode.field("mailing-lists", (function (param) {
                                 return Json_decode.list(Json_decode.string, param);
                               }), param);
-                }), data),
+                }), json),
           contacts: Json_decode.optional((function (param) {
                   return Json_decode.field("contacts", (function (param) {
                                 return Json_decode.list(Json_decode.string, param);
                               }), param);
-                }), data),
+                }), json),
           source_repositories: Json_decode.field("source-repositories", (function (param) {
                   return Json_decode.list(decodeSourceRepository, param);
-                }), data),
+                }), json),
           options: Json_decode.optional((function (param) {
                   return Json_decode.field("options", (function (param) {
                                 return Json_decode.list(Json_decode.string, param);
                               }), param);
-                }), data)
+                }), json)
         };
 }
 
 function runExample(param) {
-  var demo = parseProject(example);
-  console.log(Belt_List.toArray(demo.source_repositories));
+  console.log("Running project example");
+  var json = Json.parseOrRaise(example);
+  var project = parseProject(json);
+  console.log(project);
   
 }
 
 exports.example = example;
-exports.SRDecode = SRDecode;
 exports.decodeSourceRepositoryDict = decodeSourceRepositoryDict;
-exports.debug = debug;
-exports.decodeFail = decodeFail;
 exports.decodeSourceRepository = decodeSourceRepository;
 exports.parseProject = parseProject;
 exports.runExample = runExample;
-/* No side effect */
+/* Util Not a pure module */

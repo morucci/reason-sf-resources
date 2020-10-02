@@ -2,20 +2,48 @@
 'use strict';
 
 var Json = require("@glennsl/bs-json/src/Json.bs.js");
-
-function parseResources(json) {
-  Json.parseOrRaise(json);
-  
-}
-
-function runExample(param) {
-  console.log("noop");
-  
-}
+var Util = require("./Util.bs.js");
+var Js_dict = require("bs-platform/lib/js/js_dict.js");
+var Js_json = require("bs-platform/lib/js/js_json.js");
+var Project = require("./Project.bs.js");
+var Belt_List = require("bs-platform/lib/js/belt_List.js");
+var Caml_option = require("bs-platform/lib/js/caml_option.js");
+var Json_decode = require("@glennsl/bs-json/src/Json_decode.bs.js");
 
 var example = "\n{\n    \"resources\": {\n        \"connections\": {\n            \"github.com\": {\n                \"base-url\": \"https://github.com\",\n                \"github-app-name\": \"softwarefactory-project-zuul\",\n                \"github-label\": \"mergeit\",\n                \"type\": \"github\",\n                \"name\": \"github.com\"\n            },\n            \"rdoproject.org\": {\n                \"base-url\": \"https://review.rdoproject.org/r\",\n                \"type\": \"gerrit\",\n                \"name\": \"rdoproject.org\"\n            }\n        },\n        \"projects\": {\n            \"DLRN\": {\n                \"contacts\": [\n                    \"jpena@redhat.com\"\n                ],\n                \"description\": \"DLRN builds and maintains yum repositories following OpenStack uptream commit streams\",\n                \"issue-tracker-url\": \"https://tree.taiga.io/project/morucci-software-factory\",\n                \"name\": \"DLRN\",\n                \"review-dashboard\": \"default\",\n                \"tenant\": \"local\",\n                \"website\": \"http://github.com/softwarefactory-project/DLRN\",\n                \"source-repositories\": [\n                    {\n                        \"DLRN\": {}\n                    },\n                    {\n                        \"dlrnapi_client\": {}\n                    },\n                    {\n                        \"rdo-infra/puppet-dlrn\": {\n                            \"connection\": \"rdoproject.org\",\n                            \"zuul/include\": [\n                                \"job\"\n                            ]\n                        }\n                    },\n                    {\n                        \"rdo-infra/ansible-role-dlrn\": {\n                            \"connection\": \"rdoproject.org\",\n                            \"zuul/include\": []\n                        }\n                    }\n                ]\n            },\n            \"Packit-Service\": {\n                \"contacts\": [\n                    \"jpopelka@redhat.com\"\n                ],\n                \"description\": \"Packit Service\",\n                \"tenant\": \"packit-service\",\n                \"website\": \"https://packit.dev\",\n                \"name\": \"Packit-Service\",\n                \"source-repositories\": [\n                    {\n                        \"zuul/zuul-jobs\": {\n                            \"connection\": \"opendev.org\"\n                        }\n                    },\n                    {\n                        \"packit/packit-service-zuul\": {\n                            \"zuul/config-project\": true\n                        }\n                    },\n                    {\n                        \"packit/dashboard\": {}\n                    },\n                    {\n                        \"packit/deployment\": {}\n                    },\n                    {\n                        \"packit/dist-git-to-source-git\": {}\n                    },\n                    {\n                        \"packit/ogr\": {}\n                    },\n                    {\n                        \"packit/packit\": {}\n                    },\n                    {\n                        \"packit/packit-service\": {}\n                    },\n                    {\n                        \"packit/packit-service-centosmsg\": {}\n                    },\n                    {\n                        \"packit/packit-service-fedmsg\": {}\n                    },\n                    {\n                        \"packit/packit.dev\": {}\n                    },\n                    {\n                        \"packit/requre\": {}\n                    },\n                    {\n                        \"packit/sandcastle\": {}\n                    },\n                    {\n                        \"packit/tokman\": {}\n                    },\n                    {\n                        \"packit/upsint\": {}\n                    }\n                ]\n            },\n            \"toolbox\": {\n                \"contacts\": [\n                    \"harrymichal@seznam.cz\"\n                ],\n                \"description\": \"Unprivileged development environment\",\n                \"tenant\": \"local\",\n                \"website\": \"https://github.com/debarshiray/toolbox\",\n                \"name\": \"toolbox\",\n                \"source-repositories\": [\n                    {\n                        \"containers/toolbox\": {\n                            \"connection\": \"github.com\",\n                            \"zuul/exclude-unprotected-branches\": true\n                        }\n                    }\n                ]\n            }\n        }\n    }\n}\n";
 
+function decodeProjects(json) {
+  var projects_dict = Js_json.decodeObject(json);
+  if (projects_dict === undefined) {
+    return Util.decodeFail("Unable to decode projects");
+  }
+  var plist = Belt_List.fromArray(Js_dict.values(Caml_option.valFromOption(projects_dict)));
+  return Belt_List.map(plist, Project.parseProject);
+}
+
+function decodeResources(json) {
+  return {
+          projects: Json_decode.field("projects", decodeProjects, json)
+        };
+}
+
+function decodeTop(json) {
+  return {
+          resources: Json_decode.field("resources", decodeResources, json)
+        };
+}
+
+function runExample(param) {
+  console.log("Running resources example");
+  var json = Json.parseOrRaise(example);
+  var top = decodeTop(json);
+  console.log(top);
+  
+}
+
 exports.example = example;
-exports.parseResources = parseResources;
+exports.decodeProjects = decodeProjects;
+exports.decodeResources = decodeResources;
+exports.decodeTop = decodeTop;
 exports.runExample = runExample;
-/* No side effect */
+/* Util Not a pure module */

@@ -3,6 +3,7 @@
 
 var Fs = require("fs");
 var Path = require("path");
+var Json_decode = require("@glennsl/bs-json/src/Json_decode.bs.js");
 
 function getAbsolutePath(path) {
   return Path.resolve(__dirname, path);
@@ -13,6 +14,22 @@ function readFile(path) {
   return Fs.readFileSync(absolutePath, "utf8");
 }
 
+function debug(msg, obj) {
+  console.log("# " + msg);
+  console.log(obj);
+  
+}
+
+function decodeFail(msg) {
+  throw {
+        RE_EXN_ID: Json_decode.DecodeError,
+        _1: msg,
+        Error: new Error()
+      };
+}
+
 exports.getAbsolutePath = getAbsolutePath;
 exports.readFile = readFile;
+exports.debug = debug;
+exports.decodeFail = decodeFail;
 /* fs Not a pure module */

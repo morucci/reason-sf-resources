@@ -18,10 +18,10 @@ let example = {|
 }
 |};
 
+// Do not handle other potential fields as not needed for our main usage
 type sourceRepository = {
   name: string,
-  connection: string,
-  zuul_exclude_unprotected_branches: bool,
+  connection: option(string),
 };
 
 type project = {
@@ -36,13 +36,12 @@ type project = {
   mailing_lists: option(list(string)),
   contacts: option(list(string)),
   source_repositories: list(sourceRepository),
-  options: option(list(string))
+  options: option(list(string)),
 };
 
 module SRDecode = {
   open Json.Decode;
   let connection = field("connection", string);
-  let tt = field("zuul/exclude-unprotected-branches", bool);
   let obj = dict(connection);
 };
 
@@ -51,13 +50,12 @@ module SRDecode = {
 let parseSourceRepositories = json => {
   let srdict = json |> SRDecode.obj;
   let srdictKey0 = (srdict |> Js.Dict.keys)[0];
-  let connection = json |> Json.Decode.at([srdictKey0], SRDecode.connection);
-  let tt = json |> Json.Decode.at([srdictKey0], SRDecode.tt);
-  {
-    name: srdictKey0,
-    connection: connection,
-    zuul_exclude_unprotected_branches: tt,
-  }
+  let connection =
+    json
+    |> Json.Decode.optional(
+         Json.Decode.at([srdictKey0], SRDecode.connection),
+       );
+  {name: srdictKey0, connection};
 };
 
 let parseProject = json => {
@@ -75,7 +73,7 @@ let parseProject = json => {
     contacts: data |> optional(field("contacts", list(string))),
     source_repositories:
       data |> field("source-repositories", list(parseSourceRepositories)),
-    options: data |> optional(field("options", list(string)))
+    options: data |> optional(field("options", list(string))),
   };
 };
 

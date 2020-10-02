@@ -11,35 +11,25 @@ function connection(param) {
   return Json_decode.field("connection", Json_decode.string, param);
 }
 
-function tt(param) {
-  return Json_decode.field("zuul/exclude-unprotected-branches", Json_decode.bool, param);
-}
-
 function obj(param) {
   return Json_decode.dict(connection, param);
 }
 
 var SRDecode = {
   connection: connection,
-  tt: tt,
   obj: obj
 };
 
 function parseSourceRepositories(json) {
   var srdict = Json_decode.dict(connection, json);
   var srdictKey0 = Caml_array.caml_array_get(Object.keys(srdict), 0);
-  var connection$1 = Json_decode.at({
-          hd: srdictKey0,
-          tl: /* [] */0
-        }, connection)(json);
-  var tt$1 = Json_decode.at({
-          hd: srdictKey0,
-          tl: /* [] */0
-        }, tt)(json);
+  var connection$1 = Json_decode.optional(Json_decode.at({
+            hd: srdictKey0,
+            tl: /* [] */0
+          }, connection), json);
   return {
           name: srdictKey0,
-          connection: connection$1,
-          zuul_exclude_unprotected_branches: tt$1
+          connection: connection$1
         };
 }
 

@@ -30,6 +30,7 @@ type project = {
   tenant: string,
   website: string,
   name: string,
+  issue_tracker: option(string),
   source_repositories: array(sourceRepository),
 };
 
@@ -38,7 +39,6 @@ module SRDecode = {
   let connection = field("connection", string);
   let tt = field("zuul/exclude-unprotected-branches", bool);
   let obj = dict(connection);
-  // print_endline(connection);
 };
 
 // This is misterious
@@ -48,8 +48,6 @@ let parseSourceRepositories = json => {
   let srdictKey0 = (srdict |> Js.Dict.keys)[0];
   let connection = json |> Json.Decode.at([srdictKey0], SRDecode.connection);
   let tt = json |> Json.Decode.at([srdictKey0], SRDecode.tt);
-  print_endline(connection);
-  print_endline(string_of_bool(tt));
   {
     name: srdictKey0,
     connection: connection,
@@ -65,6 +63,7 @@ let parseProject = json => {
     contacts: data |> field("contacts", list(string)),
     tenant: data |> field("tenant", string),
     website: data |> field("website", string),
+    issue_tracker: data |> optional(field("issue-tracker", string)),
     source_repositories:
       data |> field("source-repositories", array(parseSourceRepositories)),
   };

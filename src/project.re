@@ -30,7 +30,7 @@ type project = {
   tenant: string,
   website: string,
   name: string,
-  issue_tracker: option(string),
+  issue_tracker_url: option(string),
   source_repositories: array(sourceRepository),
 };
 
@@ -63,7 +63,7 @@ let parseProject = json => {
     contacts: data |> field("contacts", list(string)),
     tenant: data |> field("tenant", string),
     website: data |> field("website", string),
-    issue_tracker: data |> optional(field("issue-tracker", string)),
+    issue_tracker_url: data |> optional(field("issue-tracker-url", string)),
     source_repositories:
       data |> field("source-repositories", array(parseSourceRepositories)),
   };

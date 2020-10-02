@@ -53,8 +53,8 @@ function parseProject(json) {
           tenant: Json_decode.field("tenant", Json_decode.string, data),
           website: Json_decode.field("website", Json_decode.string, data),
           name: Json_decode.field("name", Json_decode.string, data),
-          issue_tracker: Json_decode.optional((function (param) {
-                  return Json_decode.field("issue-tracker", Json_decode.string, param);
+          issue_tracker_url: Json_decode.optional((function (param) {
+                  return Json_decode.field("issue-tracker-url", Json_decode.string, param);
                 }), data),
           source_repositories: Json_decode.field("source-repositories", (function (param) {
                   return Json_decode.array(parseSourceRepositories, param);

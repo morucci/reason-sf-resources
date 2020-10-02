@@ -36,19 +36,25 @@ type project = {
 module SRDecode = {
   open Json.Decode;
   let connection = field("connection", string);
+  let tt = field("zuul/exclude-unprotected-branches", bool);
   let obj = dict(connection);
+  // print_endline(connection);
 };
 
 // This is misterious
 // https://stackoverflow.com/questions/52828145/using-bs-json-to-decode-object-with-dynamic-keys-in-root
 let parseSourceRepositories = json => {
   let srdict = json |> SRDecode.obj;
-  let srdictKey0 = Array.get(srdict |> Js.Dict.keys, 0);
+  let srdictKey0 = (srdict |> Js.Dict.keys)[0];
+  let connection = json |> Json.Decode.at([srdictKey0], SRDecode.connection);
+  let tt = json |> Json.Decode.at([srdictKey0], SRDecode.tt);
+  print_endline(connection);
+  print_endline(string_of_bool(tt));
   {
     name: srdictKey0,
-    connection: "github.com",
-    zuul_exclude_unprotected_branches: true,
-  };
+    connection: connection,
+    zuul_exclude_unprotected_branches: tt,
+  }
 };
 
 let parseProject = json => {
@@ -63,7 +69,6 @@ let parseProject = json => {
       data |> field("source-repositories", array(parseSourceRepositories)),
   };
 };
-
 
 let runExample = () => {
   parseProject(example);

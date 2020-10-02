@@ -3,6 +3,7 @@
 
 var Json = require("@glennsl/bs-json/src/Json.bs.js");
 var Caml_array = require("bs-platform/lib/js/caml_array.js");
+var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var Json_decode = require("@glennsl/bs-json/src/Json_decode.bs.js");
 
 var example = "\n{\n  \"contacts\": [\n    \"harrymichal@seznam.cz\"\n  ],\n  \"description\": \"Unprivileged development environment\",\n  \"tenant\": \"local\",\n  \"website\": \"https://github.com/debarshiray/toolbox\",\n  \"name\": \"toolbox\",\n  \"source-repositories\": [\n    {\n      \"containers/toolbox\": {\n        \"connection\": \"github.com\",\n        \"zuul/exclude-unprotected-branches\": true\n      }\n    }\n  ]\n}\n";
@@ -11,22 +12,37 @@ function connection(param) {
   return Json_decode.field("connection", Json_decode.string, param);
 }
 
+function tt(param) {
+  return Json_decode.field("zuul/exclude-unprotected-branches", Json_decode.bool, param);
+}
+
 function obj(param) {
   return Json_decode.dict(connection, param);
 }
 
 var SRDecode = {
   connection: connection,
+  tt: tt,
   obj: obj
 };
 
 function parseSourceRepositories(json) {
   var srdict = Json_decode.dict(connection, json);
   var srdictKey0 = Caml_array.caml_array_get(Object.keys(srdict), 0);
+  var connection$1 = Json_decode.at({
+          hd: srdictKey0,
+          tl: /* [] */0
+        }, connection)(json);
+  var tt$1 = Json_decode.at({
+          hd: srdictKey0,
+          tl: /* [] */0
+        }, tt)(json);
+  console.log(connection$1);
+  console.log(Pervasives.string_of_bool(tt$1));
   return {
           name: srdictKey0,
-          connection: "github.com",
-          zuul_exclude_unprotected_branches: true
+          connection: connection$1,
+          zuul_exclude_unprotected_branches: tt$1
         };
 }
 

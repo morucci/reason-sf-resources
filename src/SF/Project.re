@@ -1,3 +1,5 @@
+type decoder('item) = Js.Json.t => 'item;
+
 let example = {|
 {
   "contacts": [
@@ -13,7 +15,8 @@ let example = {|
         "connection": "github.com",
         "zuul/exclude-unprotected-branches": true
       }
-    }
+
+}, "software-factory/cauth"
   ]
 }
 |};
@@ -45,19 +48,42 @@ module SRDecode = {
   let obj = dict(connection);
 };
 
-// This is misterious
-// https://stackoverflow.com/questions/52828145/using-bs-json-to-decode-object-with-dynamic-keys-in-root
-let parseSourceRepositories = json => {
-  let srdict = json |> SRDecode.obj;
-  let srdictKey0 = (srdict |> Js.Dict.keys)[0];
-  let connection =
-    json
-    |> Json.Decode.optional(
-         Json.Decode.at([srdictKey0], SRDecode.connection),
-       );
-  {name: srdictKey0, connection};
+let decodeSourceRepositoryDict = (name: Js.Dict.key, json: Js.Json.t) => {
+  Json.Decode.{
+    name,
+    connection: json |> field("connection", optional(string)),
+  };
 };
 
+let debug = (msg, obj) => {
+  Js.log("# " ++ msg);
+  Js.log(obj);
+};
+
+let decodeFail = msg => Json.Decode.DecodeError(msg) |> raise;
+
+// let decodeSourceRepository = (json: Js.Json.t): sourceRepository => {
+let decodeSourceRepository: decoder(sourceRepository) =
+  json => {
+    switch (Js.Json.decodeObject(json)) {
+    | Some(dict) =>
+      switch (Js.Dict.entries(dict) |> Belt.List.fromArray) {
+      | [(k, v)] => decodeSourceRepositoryDict(k, v)
+      | _ =>
+        "SourceRepository dictionary can only contain one value" |> decodeFail
+      }
+    | None => Json.Decode.{name: json |> string, connection: None}
+    };
+  };
+
+/*  let connection =
+        json
+        |> Json.Decode.optional(
+             Json.Decode.at([srdictKey0], SRDecode.connection),
+           );
+      {name: srdictKey0, connection};
+    };
+    */
 let parseProject = json => {
   let data = Json.parseOrRaise(json);
   Json.Decode.{
@@ -72,11 +98,12 @@ let parseProject = json => {
     mailing_lists: data |> optional(field("mailing-lists", list(string))),
     contacts: data |> optional(field("contacts", list(string))),
     source_repositories:
-      data |> field("source-repositories", list(parseSourceRepositories)),
+      data |> field("source-repositories", list(decodeSourceRepository)),
     options: data |> optional(field("options", list(string))),
   };
 };
 
 let runExample = () => {
-  parseProject(example);
+  let demo = parseProject(example);
+  Js.log(demo.source_repositories |> Belt.List.toArray);
 };

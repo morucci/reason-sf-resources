@@ -2,10 +2,13 @@
 'use strict';
 
 var Json = require("@glennsl/bs-json/src/Json.bs.js");
-var Caml_array = require("bs-platform/lib/js/caml_array.js");
+var Js_dict = require("bs-platform/lib/js/js_dict.js");
+var Js_json = require("bs-platform/lib/js/js_json.js");
+var Belt_List = require("bs-platform/lib/js/belt_List.js");
+var Caml_option = require("bs-platform/lib/js/caml_option.js");
 var Json_decode = require("@glennsl/bs-json/src/Json_decode.bs.js");
 
-var example = "\n{\n  \"contacts\": [\n    \"harrymichal@seznam.cz\"\n  ],\n  \"description\": \"Unprivileged development environment\",\n  \"tenant\": \"local\",\n  \"website\": \"https://github.com/debarshiray/toolbox\",\n  \"name\": \"toolbox\",\n  \"source-repositories\": [\n    {\n      \"containers/toolbox\": {\n        \"connection\": \"github.com\",\n        \"zuul/exclude-unprotected-branches\": true\n      }\n    }\n  ]\n}\n";
+var example = "\n{\n  \"contacts\": [\n    \"harrymichal@seznam.cz\"\n  ],\n  \"description\": \"Unprivileged development environment\",\n  \"tenant\": \"local\",\n  \"website\": \"https://github.com/debarshiray/toolbox\",\n  \"name\": \"toolbox\",\n  \"source-repositories\": [\n    {\n      \"containers/toolbox\": {\n        \"connection\": \"github.com\",\n        \"zuul/exclude-unprotected-branches\": true\n      }\n\n}, \"software-factory/cauth\"\n  ]\n}\n";
 
 function connection(param) {
   return Json_decode.field("connection", Json_decode.string, param);
@@ -20,17 +23,54 @@ var SRDecode = {
   obj: obj
 };
 
-function parseSourceRepositories(json) {
-  var srdict = Json_decode.dict(connection, json);
-  var srdictKey0 = Caml_array.caml_array_get(Object.keys(srdict), 0);
-  var connection$1 = Json_decode.optional(Json_decode.at({
-            hd: srdictKey0,
-            tl: /* [] */0
-          }, connection), json);
+function decodeSourceRepositoryDict(name, json) {
   return {
-          name: srdictKey0,
-          connection: connection$1
+          name: name,
+          connection: Json_decode.field("connection", (function (param) {
+                  return Json_decode.optional(Json_decode.string, param);
+                }), json)
         };
+}
+
+function debug(msg, obj) {
+  console.log("# " + msg);
+  console.log(obj);
+  
+}
+
+function decodeFail(msg) {
+  throw {
+        RE_EXN_ID: Json_decode.DecodeError,
+        _1: msg,
+        Error: new Error()
+      };
+}
+
+function decodeSourceRepository(json) {
+  var dict = Js_json.decodeObject(json);
+  if (dict === undefined) {
+    return {
+            name: Json_decode.string(json),
+            connection: undefined
+          };
+  }
+  var match = Belt_List.fromArray(Js_dict.entries(Caml_option.valFromOption(dict)));
+  if (match) {
+    if (match.tl) {
+      throw {
+            RE_EXN_ID: Json_decode.DecodeError,
+            _1: "SourceRepository dictionary can only contain one value",
+            Error: new Error()
+          };
+    }
+    var match$1 = match.hd;
+    return decodeSourceRepositoryDict(match$1[0], match$1[1]);
+  }
+  throw {
+        RE_EXN_ID: Json_decode.DecodeError,
+        _1: "SourceRepository dictionary can only contain one value",
+        Error: new Error()
+      };
 }
 
 function parseProject(json) {
@@ -69,7 +109,7 @@ function parseProject(json) {
                               }), param);
                 }), data),
           source_repositories: Json_decode.field("source-repositories", (function (param) {
-                  return Json_decode.list(parseSourceRepositories, param);
+                  return Json_decode.list(decodeSourceRepository, param);
                 }), data),
           options: Json_decode.optional((function (param) {
                   return Json_decode.field("options", (function (param) {
@@ -80,12 +120,17 @@ function parseProject(json) {
 }
 
 function runExample(param) {
-  return parseProject(example);
+  var demo = parseProject(example);
+  console.log(Belt_List.toArray(demo.source_repositories));
+  
 }
 
 exports.example = example;
 exports.SRDecode = SRDecode;
-exports.parseSourceRepositories = parseSourceRepositories;
+exports.decodeSourceRepositoryDict = decodeSourceRepositoryDict;
+exports.debug = debug;
+exports.decodeFail = decodeFail;
+exports.decodeSourceRepository = decodeSourceRepository;
 exports.parseProject = parseProject;
 exports.runExample = runExample;
 /* No side effect */

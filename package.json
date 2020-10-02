@@ -1,5 +1,5 @@
 {
-  "name": "reason-sf-resources",
+  "name": "@softwarefactory-project/re-sf",
   "version": "0.1.0",
   "scripts": {
     "build": "bsb -make-world",
@@ -9,7 +9,7 @@
   "keywords": [
     "BuckleScript"
   ],
-  "author": "",
+  "author": "sf-dev",
   "license": "MIT",
   "devDependencies": {
     "bs-platform": "file:~/bs-platform/node_modules/bs-platform"

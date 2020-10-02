@@ -132,16 +132,17 @@ let example = {|
 |};
 
 type resources = {
-    connections: Js.Dict.t(string)
+    connections: list(SF.Connection.connection)
 }
 
 let parseResources = (json) => {
     let data = Json.parseOrRaise(json)
-    Json.Decode.{
-        connections: data |> field("connections", Connection.CNXDecode.obj)
-    }
+//    Json.Decode.{
+//        connections: data |> at([cnxdictKey0], CNXDecode.name),
+//    }
 }
 
 let runExample = () => {
-  parseResources(example);
+  //  parseResources(example);
+  Js.log("noop");
 };

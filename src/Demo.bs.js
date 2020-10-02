@@ -2,7 +2,10 @@
 'use strict';
 
 var Project$ReasonSfResources = require("./project.bs.js");
+var Connection$ReasonSfResources = require("./connection.bs.js");
 
 Project$ReasonSfResources.runExample(undefined);
+
+Connection$ReasonSfResources.runExample(undefined);
 
 /*  Not a pure module */

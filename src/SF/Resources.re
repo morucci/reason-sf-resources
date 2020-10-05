@@ -131,20 +131,29 @@ let example = {|
 }
 |};
 
-type resources = {projects: list(Project.project)};
+type resources = {
+  projects: list(Project.project),
+  connections: list(Connection.connection),
+};
 type top = {resources};
 
-let decodeProjects = (json: Js.Json.t): list(Project.project) => {
+let decodeRObjects = (parser, json: Js.Json.t) => {
   switch (Js.Json.decodeObject(json)) {
-  | Some(projects_dict) =>
-    let plist = projects_dict |> Js.Dict.values |> Belt.List.fromArray;
-    Belt.List.map(plist, Project.parseProject);
-  | None => "Unable to decode projects" |> Util.decodeFail
+  | Some(obj_dict) =>
+    let olist = obj_dict |> Js.Dict.values |> Belt.List.fromArray;
+    Belt.List.map(olist, parser);
+  | None => "Unable to decode resources objects" |> Util.decodeFail
   };
 };
 
 let decodeResources = (json: Js.Json.t): resources => {
-  Json.Decode.{projects: json |> field("projects", decodeProjects)};
+  Json.Decode.{
+    projects:
+      json |> field("projects", decodeRObjects(Project.parseProject)),
+    connections:
+      json
+      |> field("connections", decodeRObjects(Connection.parseConnection)),
+  };
 };
 
 let decodeTop = (json: Js.Json.t): top => {

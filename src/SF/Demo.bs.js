@@ -3,8 +3,11 @@
 
 var Project = require("./Project.bs.js");
 var Resources = require("./Resources.bs.js");
+var Connection = require("./Connection.bs.js");
 
 Project.runExample(undefined);
+
+Connection.runExample(undefined);
 
 Resources.runExample(undefined);
 

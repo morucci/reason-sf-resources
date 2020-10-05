@@ -1,6 +1,18 @@
 let example = {|
 {
     "resources": {
+        "tenants": {
+            "rdoproject.org": {
+                "default-connection": "rdoproject.org",
+                "description": "The rdoproject.org tenant",
+                "tenant-options": {
+                    "zuul/report-build-page": true,
+                    "zuul/web-root": "https://review.rdoproject.org/zuul/"
+                },
+                "url": "https://review.rdoproject.org/manage",
+                "name": "rdoproject.org"
+            }
+        },
         "connections": {
             "github.com": {
                 "base-url": "https://github.com",
@@ -134,6 +146,7 @@ let example = {|
 type resources = {
   projects: list(Project.project),
   connections: list(Connection.connection),
+  tenants: list(Tenant.tenant),
 };
 type top = {resources};
 
@@ -148,6 +161,7 @@ let decodeRObjects = (parser, json: Js.Json.t) => {
 
 let decodeResources = (json: Js.Json.t): resources => {
   Json.Decode.{
+    tenants: json |> field("tenants", decodeRObjects(Tenant.parse)),
     projects:
       json |> field("projects", decodeRObjects(Project.parseProject)),
     connections:
